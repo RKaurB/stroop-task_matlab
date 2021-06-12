@@ -1,5 +1,6 @@
 # Stroop task
 ## A Stroop task experiment, using MATLAB and Cogent toolbox
+### You will need MATLAB and a download of Cogent 2000 (http://www.vislab.ucl.ac.uk/cogent_2000.php). Add the file to your MATLAB path, and run program.
 
 The colour Stroop task (CST; Stroop, 1935) – a classic test of response inhibition, selective attention and processing speed – involves a series of words presented in different colours.  Participants have to ignore the word meaning while quickly and accurately identifying the colour used to display the word.
 
