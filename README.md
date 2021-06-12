@@ -1,5 +1,5 @@
 # Stroop task
-A Stroop task experiment, using MATLAB and Cogent toolbox
+*A Stroop task experiment, using MATLAB and Cogent toolbox*
 
 The colour Stroop task (CST; Stroop, 1935) – a classic test of response inhibition, selective attention and processing speed – involves a series of words presented in different colours.  Participants have to ignore the word meaning while quickly and accurately identifying the colour used to display the word.
 
