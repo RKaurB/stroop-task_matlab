@@ -1,0 +1,227 @@
+%% COLOUR STROOP TASK
+
+% This script re-creates a colour Stroop task, based upon that used in:
+% Jaiswal, S. (2018). Better cognitive performance is associated with the
+% combination of high trait mindfulness and low trait anxiety.
+
+% The code generates a .mat file containing the workspace variables. 
+% The results are also saved in a variable 'resultsTable', which includes
+% the colour, word, key response, time when the stimulus
+% was shown, exact time when the user responds, and calculated RT.
+
+%% Tidy up before start
+
+clear all;          
+clc;
+% Clears the workspace and command window
+
+%% Subject information input boxes 
+
+Participant_ID = input('Please enter participant ID, e.g. 001: '); % Enter participant ID number
+Participant_name = input('Please enter your initials: ','s');      % Enter participant initials
+Participant_age = input('Please enter your age: ');                % Enter participant age
+
+%% Seed the random number generator
+
+rand('state',sum(100*clock));
+
+%% Initialise Cogent
+
+config_display(0);  % Configures the display screen to demo mode (small screen)
+config_keyboard;    % Initialise key presses (keyboard)
+start_cogent;       % Starts Cogent
+cgloadlib;          % Enables low level Cogent functions
+
+config_log('PSM_MatlabExperiment_Stroop.log');
+config_results('PSM_MatlabExperiment_Stroop.res');
+% A .res file will be saved in the workspace under this file name
+
+%% Program start instruction
+
+cgpencol(1,1,1)         
+% Sets the pen colour to white
+cgfont('Arial',20)      
+% Sets the font and size to Arial, size 20
+
+cgtext('Welcome to the experiment!',0,100);
+cgtext('You will be shown words, one at a time, printed in different colours.',0,50);
+cgtext('Press R for printed in red, G for green, B for blue, and Y for yellow.',0,25);
+cgtext('Try to be as fast and accurate as possible.',0,0);
+cgtext('Please press space to continue.',0,-50);
+cgflip(0,0,0);          
+% Copies the above offscreen text to a black display screen
+waitkeydown(inf,71);    
+% Waits until participant makes a keypress
+
+%% Stimulus sorting (colours in words and RGB)
+
+Word_list = {'red','green','blue','yellow'}';
+% Stores the words in a 4x1 cell array
+Word_list_string = char(Word_list);
+% Converts the Word_list variable into character array, to enable it to be
+% used by preparestring later in the script
+% e.g. word_list_string(1,:) = 'red'
+RGB_colours = [1 0 0; 0 1 0; 0 0 1; 1 1 0];
+% Stores R G B values for the four colours, red, green, blue and yellow in a 4x3 matrix
+
+condMatrixBase = [repmat([1 2 3 4], 1, 4); sort(repmat([1 2 3 4], 1, 4))];     
+% Gives an enumeration of all the possible conditions
+trialsPerCondition = 1;
+% Sets the number of trials per condition to 1
+condMatrix = repmat(condMatrixBase, 1, trialsPerCondition);
+% Creates a conditions matrix based on the number of trials per condition
+[~, numTrials] = size(condMatrix);
+% The number of trials here will be 16, based on the size of the 
+% condition matrix (see above).
+
+shuffler = randperm(numTrials);
+% I adapted from PeterScarfe.com Stroopdemo PsychToolbox example: shuffler = Shuffle(1:numTrials)
+% https://uk.mathworks.com/matlabcentral/fileexchange/27076-shuffle
+condMatrixShuffled = condMatrix(:, shuffler);
+% Creates a randomised condition matrix
+
+%% Make a response matrix
+
+respMat = nan(numTrials, 6);
+% Creates a 6-column matrix which will record (1) colour word presented, (2) colour ink
+% written in, (3) key responded with, (4) time stimulus presented, (5) time response made, and (6)calculated RT
+
+%% Main program loop
+
+settextstyle('Arial',40);
+% Sets the text style to Arial, size 40
+preparestring('+',2);           
+% Draws a fixation cross in display buffer 2
+      
+for trial = 1:numTrials
+    % In this case, the for loop will run though each of trials number 1-16
+      
+    wordNum = condMatrixShuffled(1,trial);                
+    % Brings up the word condition code (1-4) at the appropriate row (trial number) 
+    % in the word condition column of the condMatrix
+    colourNum = condMatrixShuffled(2,trial);              
+    % Brings up the ink colour condition code (1-4) at the appropriate row 
+    % trial number) in the colour condition column of the condMatrix
+
+    theWord = Word_list_string(wordNum,:,1);
+    theColour = RGB_colours(colourNum,:);
+    
+    logstring(wordNum);
+    logstring(colourNum);
+    
+    % Took inspiration from the Vision Labs Stroop example cogent script
+    % Translates colour variables into the three R G B values, so that they
+    % can be used by preparestring (see below)
+    R = theColour(1,1);      
+    G = theColour(1,2);
+    B = theColour(1,3);
+    
+    % Displays the fixation point (stored in buffer 2) and waits 1000ms
+    drawpict(2);
+    wait(1000);
+          
+    % Draws the word into display buffer 1
+    clearpict(1)                % Clears the previous word before displaying the current word
+    settextstyle('Arial',60);   
+    setforecolour(R,G,B);       % Sets the colour of the word, using the R G B values stored
+    preparestring(theWord,1);   % Prepares the word
+    clearkeys
+    
+    % Displays the word stored in buffer 1
+    drawpict(1)
+    
+    % Records the time at which word is presented
+    t0 = time;            
+    logstring(t0);   
+    
+    clearkeys;
+     
+    readkeys;
+    waitkeydown(inf)
+    logkeys;
+    
+    % Check key press and calculate RT
+    % keyout is the key pressed, t is the time at which it is pressed,
+    % and n is the number of key presses
+    [keyout,t,n] = getkeydown;
+    
+    if n == 1                  % If a (single) key is pressed
+        response = keyout(1);  % the assign the that key to the response
+        RT = t(1) - t0;        % To calculate reaction time, the time the word
+                               % was presented is subtracted from the time
+                               % the key was pressed
+    
+    else response = 0          % Else the respose will be zero
+    end
+    
+    % These if, elseif statements change the default key codes for the
+    % assigned key responses to a more meaningful number, based on the
+    % word-colour condition code
+    % If a key other than an assigned key ('r', 'g', 'b' or 'y') is
+    % pressed, then the response is recorded as 0 to indicate an error.
+    if response == 18          
+       response = 1;
+    elseif response == 7
+       response = 2;
+    elseif response == 2
+       response = 3;
+    elseif response == 25
+       response = 4;
+    else response = 0;  
+        % Add these lines if you want to disgard the timing and RT data for
+        % key presses other than the above.
+        % t0 = 0;                 
+        % t(1) = 0;
+        % RT = 0;
+    end
+    
+    % Add these line if you want to disgard timing and RT data for incorrect
+    % responses.
+    % if colourNum ~= response
+        % t0 = 0;
+        % t(1) = 0;
+        % RT = 0;
+    % end
+    
+    addresults(wordNum,colourNum,response,t0,t(1),RT);
+    
+    % Record the trial data into data matrix created earlier in script,
+    % above
+    respMat(trial,1) = wordNum;
+    respMat(trial,2) = colourNum;
+    respMat(trial,3) = response;
+    respMat(trial,4) = t0;
+    respMat(trial,5) = t(1);
+    respMat(trial,6) = RT;
+        
+    % Used the array2table function tp add column headings to my results matrix, as per below syntax: 
+    % https://uk.mathworks.com/help/matlab/ref/array2table.html
+    % resultsTable = array2table(respMat,'VariableNames',{'wordNum','colourNum','response','RT'});
+        
+end
+    
+%% Thank you screen!
+
+drawpict(3);
+wait(3000);
+clearpict;
+cgpencol(1,1,1)         % Change the pen colour, i.e. white
+cgfont('Arial',30)      % Change the font and size, i.e. Arial, size 30
+cgtext('Thank you!',0,50);
+cgtext('Press the space key to exit',0,0);
+cgflip(0,0,0);          % Copies the above offscreen text to a black display screen
+waitkeydown(inf,71);    % Waits until participant makes a keypress
+
+drawpict(3);
+
+resultsTable = array2table(respMat,'VariableNames',{'wordNum','colourNum','response','t0','t1','RT'})
+% Converts array to table, creating a headed results table
+% Output intentionally not suppressed
+
+save(sprintf('%d_%s_data_stroop',Participant_ID,Participant_name))
+% Saves workspace data into a .mat file using the participant ID and name,
+% in format '[participant ID]_[participant initials]_data_stroop',
+
+%% End program
+   
+stop_cogent
