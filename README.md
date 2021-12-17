@@ -8,4 +8,4 @@ My Stroop program uses four different colours: red, green, blue, or yellow. Ther
 
 _Stroop, J. (1935). Studies of interference in serial verbal reactions. Journal of Experimental Psychology, 18(6), 643-662._
 
-**_Note:_** This project formed part of the assessment for my second year MSc Neuroscience module in Research Methods & Programming, and was graded 73% (Distinction).
+**_Note:_** This project formed part of the assessment for my second year MSc Neuroscience module in Research Methods & Programming, and was graded with Distinction.
